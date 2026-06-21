@@ -1,26 +1,269 @@
 @import "tailwindcss";
 
+/* HRT.org — premium clinical hormone-health theme */
+
 :root {
+  --navy: #0b2d4a;
+  --navy-deep: #061f35;
+  --navy-2: #0d3556;
+  --navy-hover: #0d3556;
+  --blue: #1b6f9b;
+  --blue-accent: #1b6f9b;
+  --blue-soft: #eaf4f8;
+  --rose: #8f3d63;
+  --rose-2: #a84f75;
+  --rose-hover: #7a3456;
+  --rose-soft: #f7edf2;
+  --text: #102030;
+  --text-muted: #5f6b76;
+  --bg: #ffffff;
+  --off-white: #fbfcfd;
+  --bg-subtle: #f8fafb;
+  --section-bg: #f8fafb;
+  --border: #dfe5ea;
+  --border-soft: #edf1f4;
+  --ring: #0b2d4a;
+  --shadow-sm: 0 1px 3px rgba(6, 31, 53, 0.04);
+  --shadow-md: 0 4px 14px rgba(6, 31, 53, 0.07);
+  --shadow-soft: 0 8px 24px rgba(6, 31, 53, 0.06);
+  --transition: 200ms ease;
+
+  /* shadcn/ui semantic tokens */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #102030;
+  --primary: #061f35;
+  --primary-foreground: #ffffff;
+  --secondary: #eaf4f8;
+  --secondary-foreground: #061f35;
+  --muted: #f8fafb;
+  --muted-foreground: #5f6b76;
+  --accent: #fbfcfd;
+  --accent-foreground: #061f35;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --input: #dfe5ea;
+  --ring-offset-background: #ffffff;
+  --card: #ffffff;
+  --card-foreground: #102030;
 }
 
 @theme inline {
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-navy-2: var(--navy-2);
+  --color-navy-hover: var(--navy-hover);
+  --color-blue: var(--blue);
+  --color-rose: var(--rose);
+  --color-rose-2: var(--rose-2);
+  --color-rose-hover: var(--rose-hover);
+  --color-blue-accent: var(--blue-accent);
+  --color-blue-soft: var(--blue-soft);
+  --color-rose-soft: var(--rose-soft);
+  --color-bg: var(--bg);
+  --color-off-white: var(--off-white);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-section-bg: var(--section-bg);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--ring-offset-background);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+  --shadow-soft: var(--shadow-soft);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.625;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.font-serif {
+  font-family: var(--font-playfair), Georgia, serif;
+  color: var(--navy);
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-weight: 700;
+  line-height: 0.95;
+}
+
+h2 {
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+h3 {
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.container-main {
+  max-width: 1180px;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .container-main {
+    padding-inline: 2rem;
+  }
+}
+
+a,
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.625rem 1.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.4375rem;
+  transition: background-color var(--transition), border-color var(--transition), color var(--transition),
+    box-shadow var(--transition);
+  text-decoration: none;
+  border: none;
+  font-family: inherit;
+}
+
+.btn-navy {
+  background: var(--navy-deep);
+  color: #fff;
+}
+.btn-navy:hover {
+  background: var(--navy);
+}
+
+.btn-outline {
+  background: var(--bg);
+  color: var(--navy);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover {
+  border-color: var(--navy);
+  background: var(--off-white);
+  color: var(--navy-deep);
+}
+
+.btn-rose {
+  background: var(--rose);
+  color: #fff;
+}
+.btn-rose:hover {
+  background: var(--rose-hover);
+}
+
+.card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.card-interactive:hover {
+  border-color: var(--border);
+  box-shadow: var(--shadow-soft);
+}
+
+.section {
+  padding-block: 3.5rem;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-block: 4.25rem;
+  }
+}
+
+.section-heading {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--navy);
+}
+
+.cta-banner {
+  background: var(--navy-deep);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-banner h2 {
+  color: #ffffff !important;
+}
+
+.cta-banner p {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.step-connector {
+  flex: 1;
+  height: 0;
+  border-top: 1px dashed var(--border);
+  margin-top: 1.25rem;
+  min-width: 0.75rem;
+}
+
+.divide-benefits > * + * {
+  border-top: 1px solid var(--border-soft);
+}
+
+@media (min-width: 1024px) {
+  .divide-benefits > * + * {
+    border-top: none;
+    border-left: 1px solid var(--border-soft);
+  }
 }

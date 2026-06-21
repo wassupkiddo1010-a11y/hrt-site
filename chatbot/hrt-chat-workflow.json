@@ -1,0 +1,413 @@
+{
+  "name": "HRT.org Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hrt-chatbot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -560,
+        -80
+      ],
+      "id": "d47529cb-482f-4a6c-8713-75325a4cf6e0",
+      "name": "Webhook",
+      "webhookId": "2e4c3bc3-ca19-402e-94d6-a9d614641dcb"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst body = item.body || item;\n\nconst message = body.message || body.chatInput || '';\nconst sessionId = body.sessionId || '';\nconst conversationState = body.conversationState || {};\nconst pageUrl = body.pageUrl || '/';\nconst source = body.source || 'viltis-website';\n\nconst step = conversationState.step || 'start';\nconst leadData = conversationState.leadData || {};\nconst isReturning = step !== 'start' || Object.keys(leadData).length > 0;\n\nreturn [{\n  json: {\n    userMessage: message,\n    sessionId,\n    step,\n    leadData,\n    pageUrl,\n    source,\n    isReturning,\n    conversationState\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        -80
+      ],
+      "id": "edddfabc-0278-4edb-9e19-61ba90a8ed8e",
+      "name": "Parse Input"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b51d1e1d-8dad-46a6-a335-6d493da082d5",
+              "leftValue": "={{ $json.isReturning }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -144,
+        -80
+      ],
+      "id": "e1e5b57d-6568-46d6-9163-f747da8e75af",
+      "name": "If New Visitor"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ceea5b48-e5b8-41ca-a3d4-4758a56077f0",
+              "name": "systemContext",
+              "value": "NEW_VISITOR",
+              "type": "string"
+            },
+            {
+              "id": "d2b5c5f8-43ea-43f0-9d83-be2783c97947",
+              "name": "priorHistory",
+              "value": "Nothing yet",
+              "type": "string"
+            },
+            {
+              "id": "fbe01b8e-8c3c-4193-a039-3f9f71cd1fab",
+              "name": "userMessage",
+              "value": "={{ $json.userMessage }}",
+              "type": "string"
+            },
+            {
+              "id": "49073ead-3baa-426d-9706-cd6790617500",
+              "name": "sessionId",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "5e7858b2-0282-4b46-9b57-468bbd9b54e5",
+              "name": "step",
+              "value": "={{ $json.step }}",
+              "type": "string"
+            },
+            {
+              "id": "71092fe1-629c-4812-96df-ea6e63d87813",
+              "name": "leadData",
+              "value": "={{ $json.leadData }}",
+              "type": "object"
+            },
+            {
+              "id": "551a0439-ddfb-4784-ba6f-3840f31ab2d1",
+              "name": "pageUrl",
+              "value": "={{ $json.pageUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "661b1540-eefc-4895-ba70-4951c42cd2e2",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        64,
+        -176
+      ],
+      "id": "ab300697-95d2-4f8a-8a60-0ee20c1837ec",
+      "name": "Set New Visitor Context"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst lead = data.leadData || {};\n\nconst historyLines = [];\nif (lead.name) historyLines.push(`- Name: ${lead.name}`);\nif (lead.email) historyLines.push(`- Email: ${lead.email}`);\nif (lead.phone) historyLines.push(`- Phone: ${lead.phone}`);\nif (lead.assistanceWith) historyLines.push(`- Needs help with: ${lead.assistanceWith}`);\nif (lead.topic) historyLines.push(`- Topic: ${lead.topic}`);\nif (lead.gender) historyLines.push(`- Gender pathway: ${lead.gender}`);\nif (lead.state) historyLines.push(`- State: ${lead.state}`);\n\nconst priorHistory = historyLines.length > 0\n  ? historyLines.join('\\n')\n  : 'No data collected yet';\n\nreturn [{\n  json: {\n    userMessage: data.userMessage,\n    sessionId: data.sessionId,\n    step: data.step,\n    leadData: lead,\n    pageUrl: data.pageUrl || '/',\n    source: data.source || 'viltis-website',\n    isReturning: true,\n    systemContext: 'RETURNING_VISITOR',\n    priorHistory\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        16
+      ],
+      "id": "d563af36-e4b9-4dd2-b6ff-aef6a5bb2b32",
+      "name": "Build Returning Context"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=You are the HRT.org Care Assistant — a warm, clinical, professional support and sales assistant for HRT.org / HRT.com (telehealth hormone health for men and women).\n\nCURRENT SESSION:\n- Step: {{ $json.step }}\n- Visitor type: {{ $json.systemContext || 'NEW_VISITOR' }}\n- Previously collected: {{ $json.priorHistory || 'Nothing yet' }}\n- Visitor's latest message: {{ $json.userMessage }}\n- Page URL: {{ $json.pageUrl || '/' }}\n\nMOST IMPORTANT RULE — READ FIRST:\nIf step = \"completed\":\n→ Contact info is already collected. Flow is DONE for qualification.\n→ NEVER ask for name, email, or phone again.\n→ Answer support and sales questions naturally using HRT knowledge below.\n→ Softly guide toward getting started when relevant.\n→ nextStep = \"completed\"\n→ getStartedReady stays true if already true.\n\nCOMPLETION GATE — NEVER BREAK THIS:\n→ getStartedReady = true ONLY when leadData has name AND email.\n→ Phone is optional — collect it if the visitor shares it, but never block completion for missing phone.\n→ If name or email is missing → getStartedReady MUST stay false and nextStep MUST stay \"collecting_contact\".\n→ Never mark completed without at least name + email.\n\n---\n\n## ABOUT HRT.ORG (use when answering questions)\n\n**Tagline:** Personalized Hormone Health, Guided by Science\n**Model:** Provider-guided therapy · at-home lab testing · discreet delivery\n**Contact:** info@hrt.org · 888 574 5524\n**States served:** Florida and California only (telehealth)\n**Get started:** /#get-started · Browse treatments: /treatments\n\n**Services:**\n1. Hormone Replacement Therapy (HRT) — menopause, andropause, testosterone, bioidentical hormones\n2. Peptide Therapy — anti-aging, muscle, skin, immune support\n3. Weight Management — physician-guided programs\n4. Sexual Health — ED (men), libido/intimacy (women)\n5. Hair Loss — prescription topical/oral treatments\n6. Lab Testing — at-home hormone, thyroid, prostate, fertility panels\n\n**Common symptoms:** Low energy, poor sleep, brain fog, mood changes, weight changes, low libido, hot flashes, poor recovery\n\n**How it works:**\n1. Complete online intake\n2. Licensed provider review\n3. At-home lab testing when needed\n4. Treatment shipped discreetly with ongoing support\n\n**Medical disclaimer (include when discussing symptoms/treatments):**\nHRT.org does not provide emergency medical care. Information is educational only and not a substitute for professional medical advice, diagnosis, or treatment. For emergencies, call 911.\n\n**You MUST NOT:** diagnose, prescribe, recommend dosages, guarantee outcomes, or claim to be a licensed clinician.\n\n---\n\n## STRICT STEP-BY-STEP FLOW\n\n### STEP 1 — step = \"start\" (or empty):\n→ Warm welcome to HRT.org\n→ Ask what they need help with (treatments, symptoms, men's/women's care, lab testing, or getting started)\n→ If userMessage already contains a real question (not just \"hi\"/\"hello\"):\n   → Give a brief helpful 2-sentence answer\n   → Then ask: \"To connect you with the right care team, could I get your full name and email?\"\n   → nextStep = \"collecting_contact\" (NOT topic_captured)\n→ If just a greeting:\n   → nextStep = \"topic_captured\"\n\n### STEP 2 — step = \"topic_captured\":\n→ Extract their topic/need into leadData.assistanceWith and leadData.topic\n→ Answer their question in 2-4 sentences (educational, not diagnostic)\n→ Say: \"I'd love to help further — could I get your full name and email so our team can follow up?\"\n→ nextStep = \"collecting_contact\" (ALWAYS — never stay on topic_captured after asking for contact)\n\n### STEP 3 — step = \"collecting_contact\":\nExtract from EVERY message: name, email, phone (optional), assistanceWith\n\n→ CASE A — user says \"ok/sure/yes\" with NO contact data:\n   → Rephrase: \"Of course! I'll need your full name and email — phone is optional if you'd like a callback. Go ahead whenever you're ready.\"\n   → nextStep = \"collecting_contact\"\n\n→ CASE B — partial data (missing name and/or email):\n   → Save what you have, ask ONLY for missing required fields (name and email)\n   → nextStep = \"collecting_contact\"\n   → getStartedReady = false\n\n→ CASE C — name AND email present (phone optional; assistanceWith from earlier or this message):\n   → Thank them by name\n   → Brief relevant insight about their topic\n   → Say they can continue asking questions or get started at /#get-started\n   → nextStep = \"completed\"\n   → getStartedReady = true\n\n→ CASE D — user refuses contact info:\n   → Respect it warmly, continue answering questions\n   → nextStep = \"completed\"\n   → getStartedReady = false\n\n### STEP 4 — step = \"completed\":\n→ Never re-ask for contact info\n→ Answer all HRT questions supportively\n→ One soft CTA max per reply when relevant\n→ If user asks how to start AND you already have name+email → share /#get-started and set getStartedReady = true\n→ If out-of-state → explain FL/CA only, suggest emailing info@hrt.org\n→ nextStep = \"completed\"\n\n---\n\n## SKIP-TO-START RULE\nIf user says \"get started\", \"sign up\", \"ready to begin\" at ANY step:\n→ If name AND email already collected → give /#get-started immediately, getStartedReady = true, nextStep = \"completed\"\n→ If name or email missing → ask for missing name/email first, nextStep = \"collecting_contact\", getStartedReady = false\n\n---\n\n## HOT LEAD SIGNALS — set isHotLead: true if ANY:\n- Wants to start within 30 days\n- In Florida or California\n- Asks about pricing/insurance with intent to proceed\n- Mentions specific treatment they want now\n- Says ready to book/intake/sign up\n\n---\n\n## DATA RULES\n1. Extract new info from EVERY message\n2. ALWAYS merge ALL previous leadData — never drop fields\n3. NEVER include empty strings in leadData — omit empty fields\n4. Use visitor's first name once you have it\n5. Never repeat the exact same sentence — rephrase if asking again\n6. Keep replies under ~120 words unless user asks for detail\n7. Whenever your message asks for contact info, nextStep MUST be \"collecting_contact\"\n\n---\n\n## RESPONSE FORMAT\nRESPOND WITH ONLY RAW JSON — no markdown fences, no backticks:\n\n{\n  \"message\": \"your warm reply here\",\n  \"nextStep\": \"start|topic_captured|collecting_contact|completed\",\n  \"leadData\": {\n    \"name\": \"only if known\",\n    \"email\": \"only if known\",\n    \"phone\": \"only if known\",\n    \"assistanceWith\": \"only if known\",\n    \"topic\": \"only if known\",\n    \"gender\": \"men|women|only if known\",\n    \"state\": \"only if known\"\n  },\n  \"isHotLead\": false,\n  \"getStartedReady\": false\n}"
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.userMessage }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        272,
+        -80
+      ],
+      "id": "af61237c-ce32-4a70-964d-d607ddac88f4",
+      "name": "OpenAI Chat"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nlet context = {};\ntry {\n  context = $('Set New Visitor Context').first().json;\n} catch (error) {\n  try {\n    context = $('Build Returning Context').first().json;\n  } catch (innerError) {\n    context = {};\n  }\n}\n\nlet raw = '';\ntry {\n  raw = data.output[0].content[0].text;\n} catch (error) {\n  throw new Error('Could not read OpenAI response: ' + JSON.stringify(data));\n}\n\nif (!raw) {\n  throw new Error('Empty response from OpenAI');\n}\n\nlet clean = raw.trim();\nif (clean.startsWith('```')) {\n  clean = clean.replace(/^```json?\\n?/, '').replace(/\\n?```$/, '').trim();\n}\n\nlet parsed;\ntry {\n  parsed = JSON.parse(clean);\n} catch (error) {\n  parsed = {\n    message: raw,\n    nextStep: context.step || 'start',\n    leadData: {},\n    isHotLead: false,\n    getStartedReady: false\n  };\n}\n\nconst existingLeadData = context.leadData || {};\nconst newLeadData = parsed.leadData || {};\nconst mergedLeadData = { ...existingLeadData };\n\nObject.keys(newLeadData).forEach((key) => {\n  const val = newLeadData[key];\n  if (val !== '' && val !== null && val !== undefined) {\n    mergedLeadData[key] = val;\n  }\n});\n\nconst hasEmail = Boolean(mergedLeadData.email);\nconst hasName = Boolean(mergedLeadData.name);\nconst contactComplete = hasName && hasEmail;\nconst previousStep = context.step || 'start';\n\nlet nextStep = parsed.nextStep || previousStep;\nlet getStartedReady = parsed.getStartedReady || false;\n\nif (getStartedReady && !contactComplete) {\n  getStartedReady = false;\n  if (nextStep === 'completed') {\n    nextStep = 'collecting_contact';\n  }\n}\n\nif (nextStep === 'completed' && getStartedReady && !contactComplete) {\n  nextStep = 'collecting_contact';\n  getStartedReady = false;\n}\n\n// Save to Airtable only on first completion (prevents duplicate rows)\nconst shouldSaveLead =\n  getStartedReady &&\n  contactComplete &&\n  nextStep === 'completed' &&\n  previousStep === 'collecting_contact';\n\nreturn [{\n  json: {\n    aiMessage: parsed.message,\n    nextStep,\n    leadData: mergedLeadData,\n    isHotLead: parsed.isHotLead || false,\n    getStartedReady,\n    shouldSaveLead,\n    sessionId: context.sessionId || 'unknown-' + Date.now(),\n    pageUrl: context.pageUrl || '/',\n    source: context.source || 'viltis-website'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -80
+      ],
+      "id": "41de6887-555f-49a0-a012-8b4cf65bd9a0",
+      "name": "Parse AI Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nreturn [{\n  json: {\n    response: data.aiMessage,\n    getStartedUrl: data.getStartedReady ? '/#get-started' : null,\n    conversationState: {\n      step: data.nextStep,\n      leadData: data.leadData || {},\n      isHotLead: data.isHotLead || false,\n      getStartedReady: data.getStartedReady || false,\n      leadSaved: Boolean(data.shouldSaveLead) || false\n    },\n    sessionId: data.sessionId || '',\n    leadData: data.leadData || {},\n    isHotLead: data.isHotLead || false,\n    getStartedReady: data.getStartedReady || false,\n    shouldSaveLead: data.shouldSaveLead || false,\n    pageUrl: data.pageUrl || '/',\n    source: data.source || 'viltis-website'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        -80
+      ],
+      "id": "0c4abc16-ee9f-4d1d-9f89-952a193ab7e0",
+      "name": "Build Final Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "save-lead-check",
+              "leftValue": "={{ $json.shouldSaveLead }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        16
+      ],
+      "id": "f675a071-72b3-49e7-9b09-3a8584ebafa2",
+      "name": "If Lead Ready"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_AIRTABLE_BASE_ID",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_AIRTABLE_TABLE_NAME",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.sessionId }}",
+            "Name": "={{ $json.leadData.name || \"\" }}",
+            "Email": "={{ $json.leadData.email || \"\" }}",
+            "Phone Number": "={{ $json.leadData.phone || \"\" }}",
+            "Assistance With": "={{ $json.leadData.assistanceWith || \"\" }}",
+            "Timestamp": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1104,
+        16
+      ],
+      "id": "f2745031-5f55-4ee7-950c-3e7c134e7dae",
+      "name": "Save Lead"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { response: $json.response, getStartedUrl: $json.getStartedUrl, conversationState: $json.conversationState, sessionId: $json.sessionId } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1104,
+        -176
+      ],
+      "id": "c69cd710-1d7f-426f-b539-e98f6236e85a",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Input": {
+      "main": [
+        [
+          {
+            "node": "If New Visitor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If New Visitor": {
+      "main": [
+        [
+          {
+            "node": "Set New Visitor Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Returning Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set New Visitor Context": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Returning Context": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Build Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Final Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If Lead Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Lead Ready": {
+      "main": [
+        [
+          {
+            "node": "Save Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "hrt-org-chatbot-workflow-v2"
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
