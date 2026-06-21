@@ -1,24 +1,30 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ExternalLink, Loader2, MessageCircle, Send, X } from "lucide-react";
-import Link from "next/link";
+import { Loader2, MessageCircle, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import ChatMessageContent from "@/components/chat/ChatMessageContent";
 import {
   getDefaultSessionState,
   loadChatSession,
   saveChatSession,
   updateConversationState,
 } from "@/lib/chat/session";
+import { extractChatLinks, mergeChatLinks } from "@/lib/chat/links";
 import type { ChatApiResponse, ChatMessage, ChatSessionState } from "@/lib/chat/types";
 
-function createMessage(role: ChatMessage["role"], content: string): ChatMessage {
+function createMessage(
+  role: ChatMessage["role"],
+  content: string,
+  links?: ChatMessage["links"]
+): ChatMessage {
   return {
     id: `${role}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     role,
     content,
     createdAt: Date.now(),
+    links,
   };
 }
 
@@ -29,7 +35,6 @@ export default function ChatWidget() {
   const [session, setSession] = useState<ChatSessionState>(() =>
     typeof window === "undefined" ? getDefaultSessionState() : loadChatSession()
   );
-  const getStartedUrl = session.conversationState.getStartedReady ? "/#get-started" : null;
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -43,7 +48,7 @@ export default function ChatWidget() {
       top: scrollRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages, isSending, error, getStartedUrl]);
+  }, [messages, isSending, error]);
 
   async function sendMessage(message: string) {
     setIsSending(true);
@@ -67,7 +72,16 @@ export default function ChatWidget() {
         throw new Error(data.error ?? "Unable to send your message.");
       }
 
-      setMessages((current) => [...current, createMessage("assistant", data.response)]);
+      setMessages((current) => [
+        ...current,
+        createMessage(
+          "assistant",
+          data.response,
+          mergeChatLinks(
+            extractChatLinks(data.response, data.getStartedUrl ? [data.getStartedUrl] : [])
+          )
+        ),
+      ]);
       setSession((current) => updateConversationState(current, data.conversationState));
     } catch (sendError) {
       setError(sendError instanceof Error ? sendError.message : "Something went wrong. Please try again.");
@@ -139,20 +153,18 @@ export default function ChatWidget() {
                         : "border border-border bg-bg-subtle text-text"
                     }`}
                   >
-                    {message.content}
+                    {message.role === "assistant" ? (
+                      <ChatMessageContent
+                        content={message.content}
+                        links={message.links}
+                        onNavigate={() => setIsOpen(false)}
+                      />
+                    ) : (
+                      message.content
+                    )}
                   </div>
                 </div>
               ))}
-
-              {getStartedUrl ? (
-                <Link
-                  href={getStartedUrl}
-                  className="inline-flex items-center gap-2 rounded-xl bg-navy-deep px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-navy-hover"
-                >
-                  Get started
-                  <ExternalLink className="h-4 w-4" />
-                </Link>
-              ) : null}
 
               {isSending ? (
                 <div className="flex items-center gap-2 text-sm text-text-muted">

@@ -85,4 +85,9 @@ Delete duplicate test rows for Olivia Grant and Marcus Reed (keep one row per se
 
 ## 5. Verify
 
-After updating n8n, run a test: complete a lead, then send 2 follow-up messages. You should get **exactly 1 row** per session ID.
+After updating n8n, test this scenario:
+
+1. Ask about thyroid assessment → bot answers + asks for contact once
+2. Provide name + email → bot answers thyroid question substantively, never asks contact again
+3. Say "I asked before" → bot answers thyroid again, no re-ask
+4. Say "no thanks" to contact → bot continues support only, never asks again

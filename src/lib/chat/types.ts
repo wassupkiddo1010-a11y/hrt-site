@@ -1,3 +1,5 @@
+import type { ChatLink } from "@/lib/chat/links";
+
 export interface ChatLeadData {
   name?: string;
   email?: string;
@@ -6,6 +8,7 @@ export interface ChatLeadData {
   topic?: string;
   gender?: string;
   state?: string;
+  contactDeclined?: boolean;
 }
 
 export interface ConversationState {
@@ -29,6 +32,7 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   createdAt: number;
+  links?: ChatLink[];
 }
 
 export interface ChatSessionState {
