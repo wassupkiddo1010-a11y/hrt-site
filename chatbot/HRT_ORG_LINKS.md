@@ -1,45 +1,52 @@
-# HRT.org — Canonical URLs for the Chatbot
+# HRT.org — Verified URLs for the Chatbot
 
-Use **full URLs** in the OpenAI prompt so links work from any page and open the real hrt.org site.
-
----
-
-## Core
-
-| Purpose | URL |
-|---------|-----|
-| Homepage | https://hrt.org |
-| Lab testing overview | https://hrt.org/lab-testing |
-| Shop (at-home test kits) | https://store.hrt.org |
-| Get started / register | https://portal.hrt.org/register |
-| Portal login | https://portal.hrt.org |
-| Symptoms tracker | https://portal.hrt.org/app/symptoms-tracker |
-| Contact email | info@hrt.org |
-| Phone | 888 574 5524 |
+Only URLs in this file should appear in chatbot replies. All were checked against live hrt.org (HTTP 200 + real page content).
 
 ---
 
-## Symptom checklists (Symptom Check)
+## Core (verified)
 
-| Assessment | URL | Recommend when |
-|------------|-----|----------------|
-| Female hormone imbalance | https://hrt.org/checklist/hormone-symptom-checklist-for-women-female-hormone-imbalance-test | Women, general hormone symptoms, menopause-related |
-| Male hormone imbalance | https://hrt.org/checklist/hormone-symptom-checklist-men | Men, general hormone / andropause symptoms |
-| Menopause | https://hrt.org/checklist/menopause-assessment | Hot flashes, night sweats, post-menopause |
-| Menopause self-check (alt) | https://hrt.org/checklist/menopause-signs-symptoms-self-check-assessment-quiz | Menopause screening |
-| Perimenopause | https://hrt.org/checklist/perimenopause-assessment | Irregular cycles, early transition symptoms |
-| Andropause / low testosterone | https://hrt.org/checklist/andropause-assessment | Men 40+, fatigue, low libido, muscle loss |
-| Andropause symptoms (alt) | https://hrt.org/checklist/andropause-symptoms-test-assessment | Male menopause screening |
-| Thyroid | https://hrt.org/checklist/thyroid-assessment | Fatigue, weight changes, cold sensitivity, brain fog |
-| Adrenal fatigue / stress | https://hrt.org/checklist/adrenal-fatigue-stress-test | Burnout, stress, cortisol-related symptoms |
-| PMS | https://hrt.org/checklist/pms-assessment | Premenstrual mood, cramps, cyclical symptoms |
-| Osteoporosis / bone health | https://hrt.org/checklist/osteoporosis-assessment | Bone health risk, postmenopause bone loss |
-
-**Rule:** Put the full checklist URL on its own line in the message — the chat widget renders it as a button.
+| Purpose | URL | Notes |
+|---------|-----|-------|
+| Homepage | https://hrt.org | |
+| Lab testing overview | https://hrt.org/lab-testing | |
+| Shop (at-home test kits) | https://store.hrt.org | Main shop only — no `/products/...` links |
+| Portal register | https://portal.hrt.org/register | Use instead of symptoms-tracker direct link |
+| Contact email | info@hrt.org | |
+| Phone | 888 574 5524 | |
 
 ---
 
-## Treatments — Men
+## Do NOT use (404 or login-only empty page)
+
+| URL | Why |
+|-----|-----|
+| https://hrt.org/treatments | 404 |
+| https://hrt.org/services | 404 |
+| https://hrt.org/get-started | 404 |
+| https://portal.hrt.org/app/symptoms-tracker | Login-only SPA — share register instead |
+| https://store.hrt.org/products/... | Product pages often sold out / unreliable |
+| Relative paths `/treatments`, `/get-started` | Resolve to broken hrt.org pages |
+
+---
+
+## Symptom checklists (verified)
+
+| Assessment | URL |
+|------------|-----|
+| Female hormone imbalance | https://hrt.org/checklist/hormone-symptom-checklist-for-women-female-hormone-imbalance-test |
+| Male hormone imbalance | https://hrt.org/checklist/hormone-symptom-checklist-men |
+| Menopause | https://hrt.org/checklist/menopause-assessment |
+| Perimenopause | https://hrt.org/checklist/perimenopause-assessment |
+| Andropause / low testosterone | https://hrt.org/checklist/andropause-assessment |
+| Thyroid | https://hrt.org/checklist/thyroid-assessment |
+| Adrenal fatigue / stress | https://hrt.org/checklist/adrenal-fatigue-stress-test |
+| PMS | https://hrt.org/checklist/pms-assessment |
+| Osteoporosis / bone health | https://hrt.org/checklist/osteoporosis-assessment |
+
+---
+
+## Treatments — Men (verified)
 
 | Service | URL |
 |---------|-----|
@@ -47,10 +54,11 @@ Use **full URLs** in the OpenAI prompt so links work from any page and open the 
 | Men's peptides | https://hrt.org/men/anti-aging-peptides |
 | Men's weight loss | https://hrt.org/men/weight-loss-and-management |
 | Men's hair loss | https://hrt.org/men/hair-loss |
+| Men's sexual health | https://hrt.org/men/sexual-health |
 
 ---
 
-## Treatments — Women
+## Treatments — Women (verified)
 
 | Service | URL |
 |---------|-----|
@@ -59,27 +67,7 @@ Use **full URLs** in the OpenAI prompt so links work from any page and open the 
 | Women's peptides | https://hrt.org/women/anti-aging-peptides |
 | Women's weight loss | https://hrt.org/women/weight-loss-and-management |
 | Women's sexual health | https://hrt.org/women/sexual-health |
-
----
-
-## Education / health articles
-
-| Topic | URL |
-|-------|-----|
-| Hormonal imbalance in men | https://hrt.org/health/hormonal-imbalance-in-men-whats-really-happening |
-| BHRT FAQ | https://hrt.org/health/bioidentical-hormone-replacement-therapy-bhrt-cost-facts-faqs-finding-answers |
-| Hair loss & hormones | https://hrt.org/health/hair-loss-and-hormones-causes-effects-and-treatment-in-menopause-and-andropause |
-| Individualized HRT | https://hrt.org/health/individualized-hormone-therapy-balanced-approach-treatment |
-
----
-
-## Shop collections (test kits)
-
-| Category | URL |
-|----------|-----|
-| All kits | https://store.hrt.org |
-| Heavy metals testing | https://store.hrt.org/collections/heavy-metals-essential-elements-testing |
-| Shop FAQs | https://store.hrt.org/pages/easy-faqs |
+| Women's hair loss | https://hrt.org/women/hair-loss |
 
 ---
 
@@ -87,21 +75,15 @@ Use **full URLs** in the OpenAI prompt so links work from any page and open the 
 
 | Symptoms mentioned | Best checklist |
 |--------------------|----------------|
-| Hot flashes, night sweats, menopause | Menopause or Female hormone checklist |
+| Hot flashes, night sweats, menopause | Menopause assessment |
 | Irregular periods, perimenopause | Perimenopause assessment |
 | Low energy, low libido, muscle loss (men) | Andropause or Male hormone checklist |
-| Mood swings, weight gain (women) | Female hormone imbalance checklist |
+| Mood swings, weight gain (women) | Female hormone checklist |
 | Thyroid, cold sensitivity, hair thinning | Thyroid assessment |
 | Stress, burnout, adrenal | Adrenal fatigue assessment |
 | PMS, cyclical mood | PMS assessment |
 | Bone health, osteoporosis risk | Osteoporosis assessment |
 
----
-
-## Legal / company
-
-| Page | URL |
-|------|-----|
-| Contact | mailto:info@hrt.org |
+**Rule:** Put the full checklist URL on its own line in the message — the chat widget renders it as a button.
 
 **States served:** Florida and California only (telehealth).
