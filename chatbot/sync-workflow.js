@@ -11,15 +11,7 @@ function setNodeCode(name, file) {
 }
 
 setNodeCode("Parse AI Response", "parse-ai-response.js");
-setNodeCode("Build Final Response", "build-final-response.js");
-
-let buildReturning = wf.nodes.find((n) => n.name === "Build Returning Context").parameters.jsCode;
-if (!buildReturning.includes("contactAsked")) {
-  wf.nodes.find((n) => n.name === "Build Returning Context").parameters.jsCode = buildReturning.replace(
-    "if (lead.symptomChecklistPrompted)",
-    "if (lead.contactAsked) historyLines.push('- Contact: already asked once — do NOT ask again unless missing partial field');\nif (lead.symptomChecklistPrompted)"
-  );
-}
+setNodeCode("Build Returning Context", "build-returning-context.js");
 
 const md = fs.readFileSync(path.join(root, "HRT_OPENAI_SYSTEM_PROMPT.md"), "utf8");
 const match = md.match(/```\n([\s\S]*?)\n```/);

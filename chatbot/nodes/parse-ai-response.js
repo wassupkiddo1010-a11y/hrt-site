@@ -44,6 +44,7 @@ const existingLeadData = context.leadData || {};
 const newLeadData = parsed.leadData || {};
 const mergedLeadData = { ...existingLeadData };
 const userMessage = (context.userMessage || '').trim();
+const previousStep = context.step || 'start';
 
 Object.keys(newLeadData).forEach((key) => {
   const val = newLeadData[key];
@@ -76,33 +77,44 @@ const hasEmail = Boolean(mergedLeadData.email);
 const hasName = Boolean(mergedLeadData.name);
 const contactComplete = hasName && hasEmail;
 const contactDeclined = Boolean(mergedLeadData.contactDeclined);
-const previousStep = context.step || 'start';
+const wasContactAsked = Boolean(mergedLeadData.contactAsked);
 
 let nextStep = parsed.nextStep || previousStep;
 let getStartedReady = parsed.getStartedReady || false;
 
-if (nextStep === 'collecting_contact' || parsed.leadData?.contactAsked) {
+if (nextStep === 'collecting_contact') {
   mergedLeadData.contactAsked = true;
 }
 
-if (mergedLeadData.contactAsked && !contactComplete && !contactDeclined && previousStep === 'collecting_contact') {
+if (parsed.leadData?.contactAsked) {
+  mergedLeadData.contactAsked = true;
+}
+
+if (wasContactAsked && !contactComplete && !contactDeclined && previousStep === 'collecting_contact') {
   const gavePartial = Boolean(emailInMessage) || Boolean(newLeadData.name) || Boolean(newLeadData.email);
-  if (!gavePartial && !refusalPattern.test(userMessage)) {
+  const isRefusal = refusalPattern.test(userMessage);
+  if (!gavePartial && !isRefusal) {
     nextStep = 'completed';
     getStartedReady = false;
   }
 }
 
-if (getStartedReady && !contactComplete) {
+if (contactComplete) {
+  nextStep = 'completed';
+  getStartedReady = true;
+}
+
+if (contactDeclined) {
+  nextStep = 'completed';
   getStartedReady = false;
 }
 
-if (contactComplete || contactDeclined || previousStep === 'completed') {
+if (previousStep === 'completed') {
   nextStep = 'completed';
   getStartedReady = contactComplete;
 }
 
-if (nextStep === 'completed' && getStartedReady && !contactComplete) {
+if (getStartedReady && !contactComplete) {
   getStartedReady = false;
 }
 
@@ -112,10 +124,10 @@ const messageCount = Math.max(
 );
 
 const shouldSaveLead =
-  getStartedReady &&
   contactComplete &&
   nextStep === 'completed' &&
-  previousStep === 'collecting_contact';
+  previousStep === 'collecting_contact' &&
+  Boolean(emailInMessage || newLeadData.name || newLeadData.email);
 
 function formatPlainText(text) {
   if (!text) return '';
@@ -130,47 +142,9 @@ function formatPlainText(text) {
     .trim();
 }
 
-function sanitizeContactAsk(message, lead, step) {
-  let text = formatPlainText(message || '');
-  const complete = Boolean(lead.name && lead.email);
-  const declined = Boolean(lead.contactDeclined);
-  const asked = Boolean(lead.contactAsked);
-
-  if (complete || declined || step === 'completed' || (asked && !complete && step !== 'collecting_contact')) {
-    return text
-      .replace(/If you'd like,? share your (full )?name and email[^.!?]*[.!?]\s*/gi, '')
-      .replace(/If you'd like,? share your email[^.!?]*[.!?]\s*/gi, '')
-      .replace(/share your (full )?name and email[^.!?]*[.!?]\s*/gi, '')
-      .replace(/may I get your (full )?name and email[^.!?]*[.!?]\s*/gi, '')
-      .replace(/could I get your (full )?name and email[^.!?]*[.!?]\s*/gi, '')
-      .replace(/connect you with our care team[^.!?]*[.!?]\s*/gi, '')
-      .replace(/our team can follow up[^.!?]*[.!?]\s*/gi, '')
-      .replace(/https?:\/\/portal\.hrt\.org\/register\s*/gi, '')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-  }
-
-  if (lead.name && !lead.email) {
-    return text
-      .replace(/name and email/gi, 'email')
-      .replace(/your name and email/gi, 'your email')
-      .replace(/full name and email/gi, 'email')
-      .trim();
-  }
-
-  if (!lead.name && lead.email) {
-    return text
-      .replace(/name and email/gi, 'name')
-      .replace(/your name and email/gi, 'your name')
-      .trim();
-  }
-
-  return text;
-}
-
 return [{
   json: {
-    aiMessage: sanitizeContactAsk(parsed.message || '', mergedLeadData, nextStep),
+    aiMessage: formatPlainText(parsed.message || ''),
     nextStep,
     leadData: mergedLeadData,
     isHotLead: parsed.isHotLead || false,
