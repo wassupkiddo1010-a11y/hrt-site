@@ -115,7 +115,14 @@ const parsedJson = extractJsonFromText(raw);
 const previousStep = context.step || 'start';
 const userMessage = (context.userMessage || '').trim();
 const existingLeadData = context.leadData || {};
-const conversationState = context.conversationState || {};
+let conversationState = context.conversationState || {};
+if (!conversationState || Object.keys(conversationState).length === 0) {
+  try {
+    conversationState = $('Parse Input').first().json.conversationState || {};
+  } catch (error) {
+    conversationState = {};
+  }
+}
 
 let parsed;
 if (parsedJson) {
@@ -141,6 +148,16 @@ Object.keys(newLeadData).forEach((key) => {
 });
 
 applyContactFromMessage(userMessage, mergedLeadData);
+
+const topicDismissPattern = /\b(not looking for|not interested in|not today)\b/i;
+if (topicDismissPattern.test(userMessage)) {
+  if (newLeadData.topic) {
+    mergedLeadData.topic = newLeadData.topic;
+  } else {
+    delete mergedLeadData.topic;
+    delete mergedLeadData.assistanceWith;
+  }
+}
 
 const refusalPattern =
   /\b(no thanks|not interested|rather not|don't want to share|do not want to share|won't share|no email|pass on that|just browsing|not comfortable|won't give|i'd rather not)\b/i;

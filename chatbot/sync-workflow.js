@@ -10,8 +10,10 @@ function setNodeCode(name, file) {
     .trim();
 }
 
+setNodeCode("Parse Input", "parse-input.js");
 setNodeCode("Parse AI Response", "parse-ai-response.js");
 setNodeCode("Build Returning Context", "build-returning-context.js");
+setNodeCode("Build Final Response", "build-final-response.js");
 
 const md = fs.readFileSync(path.join(root, "HRT_OPENAI_SYSTEM_PROMPT.md"), "utf8");
 const match = md.match(/```\n([\s\S]*?)\n```/);

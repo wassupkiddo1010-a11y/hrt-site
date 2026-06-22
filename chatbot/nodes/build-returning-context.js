@@ -25,6 +25,7 @@ if (lead.contactDeclined) {
 
 if (lead.symptomChecklistPrompted) historyLines.push('- Symptom checklist: already shared');
 if (lead.portalPrompted) historyLines.push('- Portal: already shared');
+if (lead.testKitRecommended) historyLines.push(`- Test kit recommended: ${lead.testKitRecommended}`);
 if (lead.assistanceWith) {
   historyLines.push(`- Previous topic (only if they mention it): ${lead.assistanceWith}`);
 }
@@ -53,6 +54,7 @@ return [{
     messageCount: data.messageCount || 0,
     symptomChecklistDone: data.symptomChecklistDone || false,
     portalRegistered: data.portalRegistered || false,
+    conversationState: data.conversationState || {},
     isReturning: true,
     systemContext: 'RETURNING_VISITOR',
     priorHistory
