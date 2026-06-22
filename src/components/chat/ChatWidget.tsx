@@ -11,7 +11,7 @@ import {
   saveChatSession,
   updateConversationState,
 } from "@/lib/chat/session";
-import { extractChatLinks, mergeChatLinks } from "@/lib/chat/links";
+import { extractChatLinks } from "@/lib/chat/links";
 import type { ChatApiResponse, ChatMessage, ChatSessionState } from "@/lib/chat/types";
 
 function createMessage(
@@ -74,13 +74,7 @@ export default function ChatWidget() {
 
       setMessages((current) => [
         ...current,
-        createMessage(
-          "assistant",
-          data.response,
-          mergeChatLinks(
-            extractChatLinks(data.response, data.getStartedUrl ? [data.getStartedUrl] : [])
-          )
-        ),
+        createMessage("assistant", data.response, extractChatLinks(data.response)),
       ]);
       setSession((current) => updateConversationState(current, data.conversationState));
     } catch (sendError) {

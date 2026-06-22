@@ -9,6 +9,7 @@ export interface ChatLeadData {
   gender?: string;
   state?: string;
   contactDeclined?: boolean;
+  contactAsked?: boolean;
   symptoms?: string[];
   symptomChecklistPrompted?: boolean;
   portalPrompted?: boolean;
