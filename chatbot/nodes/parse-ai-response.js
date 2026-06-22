@@ -22,29 +22,116 @@ if (!raw) {
   throw new Error('Empty response from OpenAI');
 }
 
-let clean = raw.trim();
-if (clean.startsWith('```')) {
-  clean = clean.replace(/^```json?\n?/, '').replace(/\n?```$/, '').trim();
+function extractJsonFromText(text) {
+  let clean = text.trim();
+
+  if (clean.startsWith('```')) {
+    clean = clean.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
+  }
+
+  try {
+    return JSON.parse(clean);
+  } catch (error) {
+    // ignore
+  }
+
+  const start = clean.indexOf('{');
+  const end = clean.lastIndexOf('}');
+
+  if (start !== -1 && end > start) {
+    try {
+      return JSON.parse(clean.slice(start, end + 1));
+    } catch (error) {
+      // ignore
+    }
+  }
+
+  return null;
 }
 
+function extractEmail(text) {
+  const match = text.match(/[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}/);
+  return match ? match[0] : null;
+}
+
+function extractName(text) {
+  const patterns = [
+    /(?:my name is|name is|i am|i'm|this is|call me)\s+([a-zA-Z][a-zA-Z\s'-]{0,40})/i,
+    /(?:^|\s)([a-zA-Z][a-zA-Z'-]{1,40})\s+[\w.+-]+@/,
+    /^([a-zA-Z][a-zA-Z\s'-]{1,40}),?\s+[\w.+-]+@/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (!match) continue;
+
+    let name = match[1]
+      .trim()
+      .replace(/\s+(?:and|email|phone|my|is)\b.*$/i, '')
+      .trim();
+
+    if (name.length < 2) continue;
+
+    name = name
+      .split(/\s+/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(' ');
+
+    return name;
+  }
+
+  return null;
+}
+
+function applyContactFromMessage(text, lead) {
+  const email = extractEmail(text);
+  const name = extractName(text);
+
+  if (email) lead.email = email;
+  if (name) lead.name = name;
+}
+
+function formatPlainText(text) {
+  if (!text) return '';
+
+  let output = text.trim();
+
+  const jsonStart = output.search(/\{\s*"message"\s*:/);
+  if (jsonStart > 0) {
+    output = output.slice(0, jsonStart).trim();
+  }
+
+  return output
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^\s*[*-]\s+/gm, '• ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+const parsedJson = extractJsonFromText(raw);
+const previousStep = context.step || 'start';
+const userMessage = (context.userMessage || '').trim();
+const existingLeadData = context.leadData || {};
+const conversationState = context.conversationState || {};
+
 let parsed;
-try {
-  parsed = JSON.parse(clean);
-} catch (error) {
+if (parsedJson) {
+  parsed = parsedJson;
+} else {
   parsed = {
-    message: raw,
-    nextStep: context.step || 'start',
+    message: formatPlainText(raw),
+    nextStep: previousStep,
     leadData: {},
     isHotLead: false,
-    getStartedReady: false
+    getStartedReady: false,
   };
 }
 
-const existingLeadData = context.leadData || {};
 const newLeadData = parsed.leadData || {};
 const mergedLeadData = { ...existingLeadData };
-const userMessage = (context.userMessage || '').trim();
-const previousStep = context.step || 'start';
 
 Object.keys(newLeadData).forEach((key) => {
   const val = newLeadData[key];
@@ -53,24 +140,13 @@ Object.keys(newLeadData).forEach((key) => {
   }
 });
 
-const emailInMessage = userMessage.match(/[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}/);
-if (emailInMessage && !mergedLeadData.email) {
-  mergedLeadData.email = emailInMessage[0];
-}
+applyContactFromMessage(userMessage, mergedLeadData);
 
-const refusalPattern = /\b(no thanks|not interested|don't want|do not want|prefer not|rather not|skip|without sharing|won't share|no email|pass on that|just browsing|not comfortable|won't give|i'd rather not|rather not share)\b/i;
+const refusalPattern =
+  /\b(no thanks|not interested|rather not|don't want to share|do not want to share|won't share|no email|pass on that|just browsing|not comfortable|won't give|i'd rather not)\b/i;
+
 if (refusalPattern.test(userMessage) && !(mergedLeadData.name && mergedLeadData.email)) {
   mergedLeadData.contactDeclined = true;
-}
-
-const topicDismissPattern = /\b(not looking for|not interested in|not today)\b/i;
-if (topicDismissPattern.test(userMessage)) {
-  if (newLeadData.topic) {
-    mergedLeadData.topic = newLeadData.topic;
-  } else {
-    delete mergedLeadData.topic;
-    delete mergedLeadData.assistanceWith;
-  }
 }
 
 const hasEmail = Boolean(mergedLeadData.email);
@@ -78,24 +154,20 @@ const hasName = Boolean(mergedLeadData.name);
 const contactComplete = hasName && hasEmail;
 const contactDeclined = Boolean(mergedLeadData.contactDeclined);
 const wasContactAsked = Boolean(mergedLeadData.contactAsked);
+const wasAlreadyComplete = Boolean(existingLeadData.name && existingLeadData.email);
+const wasAlreadySaved = Boolean(conversationState.leadSaved);
 
 let nextStep = parsed.nextStep || previousStep;
-let getStartedReady = parsed.getStartedReady || false;
+let getStartedReady = false;
 
-if (nextStep === 'collecting_contact') {
-  mergedLeadData.contactAsked = true;
-}
-
-if (parsed.leadData?.contactAsked) {
+if (nextStep === 'collecting_contact' || parsed.leadData?.contactAsked) {
   mergedLeadData.contactAsked = true;
 }
 
 if (wasContactAsked && !contactComplete && !contactDeclined && previousStep === 'collecting_contact') {
-  const gavePartial = Boolean(emailInMessage) || Boolean(newLeadData.name) || Boolean(newLeadData.email);
-  const isRefusal = refusalPattern.test(userMessage);
-  if (!gavePartial && !isRefusal) {
+  const gaveContact = Boolean(extractEmail(userMessage) || extractName(userMessage));
+  if (!gaveContact && !refusalPattern.test(userMessage)) {
     nextStep = 'completed';
-    getStartedReady = false;
   }
 }
 
@@ -109,50 +181,45 @@ if (contactDeclined) {
   getStartedReady = false;
 }
 
-if (previousStep === 'completed') {
+if (previousStep === 'completed' && !contactComplete && !contactDeclined) {
   nextStep = 'completed';
-  getStartedReady = contactComplete;
 }
 
-if (getStartedReady && !contactComplete) {
-  getStartedReady = false;
-}
-
-const messageCount = Math.max(
-  Number(parsed.messageCount) || 0,
-  (context.messageCount || 0) + 1
-);
+const gotContactThisTurn =
+  Boolean(extractEmail(userMessage)) ||
+  Boolean(extractName(userMessage)) ||
+  Boolean(newLeadData.name) ||
+  Boolean(newLeadData.email);
 
 const shouldSaveLead =
   contactComplete &&
-  nextStep === 'completed' &&
-  previousStep === 'collecting_contact' &&
-  Boolean(emailInMessage || newLeadData.name || newLeadData.email);
+  !wasAlreadySaved &&
+  gotContactThisTurn &&
+  nextStep === 'completed';
 
-function formatPlainText(text) {
-  if (!text) return '';
-  return text
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/__(.+?)__/g, '$1')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/^\s*[*-]\s+/gm, '• ')
-    .replace(/(?<!\S)\*(?!\s)(.+?)(?<!\S)\*(?!\S)/g, '$1')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+const messageCount = Math.max(Number(parsed.messageCount) || 0, (context.messageCount || 0) + 1);
+
+let aiMessage = formatPlainText(parsed.message || parsed.response || '');
+
+if (!aiMessage) {
+  aiMessage = contactComplete
+    ? `Thank you, ${mergedLeadData.name}! Our team has your details and can follow up if you need anything else.`
+    : 'Happy to help — let me know if you have any other questions about hormone health or our services.';
 }
 
-return [{
-  json: {
-    aiMessage: formatPlainText(parsed.message || ''),
-    nextStep,
-    leadData: mergedLeadData,
-    isHotLead: parsed.isHotLead || false,
-    getStartedReady,
-    shouldSaveLead,
-    messageCount,
-    sessionId: context.sessionId || 'unknown-' + Date.now(),
-    pageUrl: context.pageUrl || '/',
-    source: context.source || 'viltis-website'
-  }
-}];
+return [
+  {
+    json: {
+      aiMessage,
+      nextStep,
+      leadData: mergedLeadData,
+      isHotLead: parsed.isHotLead || false,
+      getStartedReady,
+      shouldSaveLead,
+      messageCount,
+      sessionId: context.sessionId || 'unknown-' + Date.now(),
+      pageUrl: context.pageUrl || '/',
+      source: context.source || 'viltis-website',
+    },
+  },
+];

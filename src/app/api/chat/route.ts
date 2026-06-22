@@ -83,12 +83,19 @@ export async function POST(request: Request) {
     }
 
     const data = parsed as Partial<ChatApiResponse>;
-    const response =
+    let response =
       typeof data.response === "string"
         ? data.response.trim()
         : typeof (parsed as Record<string, unknown>).reply === "string"
           ? ((parsed as Record<string, unknown>).reply as string).trim()
           : null;
+
+    if (response) {
+      const jsonStart = response.search(/\{\s*"message"\s*:/);
+      if (jsonStart > 0) {
+        response = response.slice(0, jsonStart).trim();
+      }
+    }
 
     if (!response) {
       return NextResponse.json(
