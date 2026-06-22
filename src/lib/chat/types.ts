@@ -9,6 +9,10 @@ export interface ChatLeadData {
   gender?: string;
   state?: string;
   contactDeclined?: boolean;
+  symptoms?: string[];
+  symptomChecklistPrompted?: boolean;
+  portalPrompted?: boolean;
+  testKitRecommended?: string;
 }
 
 export interface ConversationState {
@@ -17,6 +21,9 @@ export interface ConversationState {
   isHotLead?: boolean;
   getStartedReady?: boolean;
   leadSaved?: boolean;
+  messageCount?: number;
+  symptomChecklistDone?: boolean;
+  portalRegistered?: boolean;
 }
 
 export interface ChatRequestBody {
